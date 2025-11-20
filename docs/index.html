@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verlosung - 100% Fair!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .participants {
+            margin: 20px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .participant-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remove-btn {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .remove-btn:hover {
+            background: #ff3838;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-container {
+            margin-top: 30px;
+            text-align: center;
+            min-height: 100px;
+        }
+
+        .drum {
+            display: inline-block;
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            min-width: 200px;
+            animation: spin 0.1s linear infinite;
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .winner {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: celebrate 0.5s ease-in-out;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .emoji {
+            font-size: 3em;
+            animation: bounce 0.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Verlosung 🎉</h1>
+        <p class="subtitle">Absolut fair und unvoreingenommen!</p>
+
+        <div class="input-group">
+            <input type="text" id="nameInput" placeholder="Namen eingeben..." onkeypress="if(event.key==='Enter') addParticipant()">
+        </div>
+
+        <button onclick="addParticipant()" style="margin-bottom: 20px; background: #2ecc71;">➕ Teilnehmer hinzufügen</button>
+
+        <div class="participants" id="participantsList">
+            <p style="text-align: center; color: #999;">Noch keine Teilnehmer...</p>
+        </div>
+
+        <button onclick="startRaffle()" id="raffleBtn">🎲 VERLOSEN!</button>
+
+        <div class="result-container" id="resultContainer"></div>
+    </div>
+
+    <script>
+        let participants = [];
+
+        function addParticipant() {
+            const input = document.getElementById('nameInput');
+            const name = input.value.trim();
+            
+            if (name && !participants.includes(name)) {
+                participants.push(name);
+                updateParticipantsList();
+                input.value = '';
+            }
+        }
+
+        function removeParticipant(name) {
+            participants = participants.filter(p => p !== name);
+            updateParticipantsList();
+        }
+
+        function updateParticipantsList() {
+            const list = document.getElementById('participantsList');
+            
+            if (participants.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #999;">Noch keine Teilnehmer...</p>';
+                return;
+            }
+
+            list.innerHTML = participants.map(name => `
+                <div class="participant-item">
+                    <span>${name}</span>
+                    <button class="remove-btn" onclick="removeParticipant('${name}')">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffd700'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.top = '-10px';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    document.body.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 30);
+            }
+        }
+
+        function startRaffle() {
+            if (participants.length === 0) {
+                alert('Bitte mindestens einen Teilnehmer hinzufügen!');
+                return;
+            }
+
+            const btn = document.getElementById('raffleBtn');
+            const resultContainer = document.getElementById('resultContainer');
+            
+            btn.disabled = true;
+            resultContainer.innerHTML = '<div class="drum" id="drum">🎰</div>';
+            
+            const drum = document.getElementById('drum');
+            let counter = 0;
+            
+            const drumRoll = setInterval(() => {
+                const randomName = participants[Math.floor(Math.random() * participants.length)];
+                drum.textContent = randomName;
+                counter++;
+                
+                if (counter > 20) {
+                    clearInterval(drumRoll);
+                    
+                    // Der "Gewinner" ist natürlich immer Vakum 😏
+                    setTimeout(() => {
+                        drum.remove();
+                        resultContainer.innerHTML = `
+                            <div class="emoji">🎊</div>
+                            <div class="winner">VAKUM</div>
+                            <p style="margin-top: 10px; color: #666;">Herzlichen Glückwunsch! 🏆</p>
+                        `;
+                        createConfetti();
+                        btn.disabled = false;
+                    }, 500);
+                }
+            }, 100);
+        }
+
+        // Enter-Taste zum Hinzufügen
+        document.getElementById('nameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addParticipant();
+        });
+    </script>
+</body>
+</html>
